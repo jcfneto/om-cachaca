@@ -4,11 +4,15 @@ from tqdm import tqdm
 
 
 def generate_messages(data):
-    base_prompt = (
-        'Considere a frase a seguir, responda apenas com "sim" ou "não". '
-        '"sim" se a frase remete a bebida Cachaça diretamente ou indiretamente e '
-        '"não" se a frase não tem nenhuma relação com a bebida Cachaça:\n\n{sentence}'
-    )
+    base_prompt = """
+    Se a sentença a seguir for apenas um nome próprio, só nome próprio com emoji,
+    só emoji, só uma palavra, só um número, só um caractere, só uma palavra,
+    só arrobas de perfis ou só hashtags, responda true, caso contrário, responda false.
+
+    Sentença: {sentence}
+
+    A resposta deverá conter apenas uma palavra: true ou false.
+    """
     return [
         {'role': 'user', 'content': base_prompt.format(sentence=sentence)}
         for sentence in data.text
@@ -16,18 +20,15 @@ def generate_messages(data):
 
 
 def classify_messages(messages):
-    is_about_cachaca = []
+    to_remove = []
     for message in tqdm(messages):
         try:
             response = ollama.chat(model='llama3', messages=[message])
-            response_normalized = response['message']['content'].lower().strip()
-            is_about_cachaca.append(
-                True if 'sim' in response_normalized else False
-            )
+            to_remove.append(response['message']['content'].lower().strip())
         except Exception as e:
             print(f'Error: {e}')
-            is_about_cachaca.append(None)
-    return is_about_cachaca
+            to_remove.append(None)
+    return to_remove
 
 
 def save_data(data, path):
@@ -43,7 +44,7 @@ def process_data():
         output_path = input('Insira o caminho do arquivo de saída CSV: ')
     data = pd.read_csv(input_path)
     messages = generate_messages(data)
-    data['is_about_cachaca'] = classify_messages(messages)
+    data['to_remove'] = classify_messages(messages)
     save_data(data, output_path)
 
 
