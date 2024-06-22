@@ -1,4 +1,5 @@
 pandas
 ollama
-tiktoken
 tqdm
+rich
+scikit-learn
