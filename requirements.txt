@@ -3,3 +3,5 @@ ollama
 tqdm
 rich
 scikit-learn
+openai
+python-dotenv
